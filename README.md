@@ -7,6 +7,8 @@ Installation:
 2. Unzip it into FoundryVTT/resources/app/public/modules
 3. Restart Foundry if it was running.
 
+Requires the dnd5e system. Supports the default character sheet, the better NPC sheet and tentativly Mörills adnd5e sheet, though be cautious with the later one, sinc that hasn't been tested as thorough.
+
 You're good to go!
 
 [-> Preview <-](https://streamable.com/msm48)
