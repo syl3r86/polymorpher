@@ -7,16 +7,7 @@
 	"systems": ["dnd5e"],
 	"scripts": ["./polymorpher.js"],
 	"styles": ["./polymorpher.css"],
-	"packs": [
-        {
-            "name": "backup",
-            "label": "Polymorpher Backup",
-            "module": "polymorpher",
-            "system":"dnd5e",
-            "path": "backup.db",
-            "entity": "Actor"
-        }
-    ],
+	"packs": [],
     "url": "https://github.com/syl3r86/polymorpher",
     "manifest": "https://raw.githubusercontent.com/syl3r86/polymorpher/master/polymorpher/module.json",
     "download": "https://github.com/syl3r86/polymorpher/raw/master/polymorpher.zip",
