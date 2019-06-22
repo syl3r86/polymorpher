@@ -2,12 +2,21 @@
 	"name": "polymorpher",
 	"title": "polymorpher",
 	"description": "A module for Foundry VTT that lets you polymorph characters into any other character!",
-	"version": "0.1",
+	"version": "0.2",
 	"author": "Felix",
 	"systems": ["dnd5e"],
 	"scripts": ["./polymorpher.js"],
-	"styles": [],
-	"packs": [],
+	"styles": ["./polymorpher.css"],
+	"packs": [
+        {
+            "name": "backup",
+            "label": "Polymorpher Backup",
+            "module": "polymorpher",
+            "system":"dnd5e",
+            "path": "backup.db",
+            "entity": "Actor"
+        }
+    ],
     "url": "https://github.com/syl3r86/polymorpher",
     "manifest": "https://raw.githubusercontent.com/syl3r86/polymorpher/master/polymorpher/module.json",
     "download": "https://github.com/syl3r86/polymorpher/raw/master/polymorpher.zip",

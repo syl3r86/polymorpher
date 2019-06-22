@@ -1,5 +1,6 @@
 
 class Polymorpher extends Application {
+
     constructor() {
         super();
 
@@ -13,6 +14,62 @@ class Polymorpher extends Application {
         // adnd5e sheets
         Hooks.on(`renderActorSheetA5eCharacter`, (app, html, data) => this.enablePolymorphing(app, html, data));
         Hooks.on(`renderActorSheetA5eNPC`, (app, html, data) => this.enablePolymorphing(app, html, data));
+
+
+        Hooks.on('ready', () => {
+            game.settings.register("Polymorpher", "store", {
+                name: "Polymorpher backup character store",
+                hint: "stores polymorphed targets",
+                default: {},
+                type: Object,
+                scope: 'world',
+                onChange: backup => {
+                    this.backupCharacterStore = backup;
+                    this.render(false);
+                }
+            });
+            this.backupCharacterStore = game.settings.get('Polymorpher', 'store');
+            
+            let button = $(`<button id="polymorpherBackupSystem"><i class="fas fa-address-book"></i> Polymorpher Backups</button>`);
+            button.click(ev => {
+                this.render(true);
+            });
+            $('#manage-modules').after(button);
+        });
+    }
+
+    static get defaultOptions() {
+        const options = super.defaultOptions;
+        options.classes = options.classes.concat('polymorpher');
+        options.template = "public/modules/polymorpher/template/app.html";
+        options.width = 600;
+        options.title = 'Polymorpher Backup Store';
+        return options;
+    }
+
+    getData() {
+        let data = {};
+        data.backupCharacterStore = this.backupCharacterStore;
+        data.empty = (Object.keys(this.backupCharacterStore).length === 0);
+        return data;
+    }
+
+    activateListeners(html) {
+        $(html.find('.export')).click(ev => {
+            let combinedId = $(ev.target).parents('li').attr('data-combinedId');
+            this.exportFromStorage(combinedId);
+        });
+
+        $(html.find('.restore')).click(ev => {
+            let combinedId = $(ev.target).parents('li').attr('data-combinedId');
+            this.restoreFromStorage(combinedId);
+        });
+
+        $(html.find('.delete')).click(ev => {
+            let combinedId = $(ev.target).parents('li').attr('data-combinedId');
+            this.removeFromStorage(combinedId);
+            this.render(false);
+        });
     }
 
     enablePolymorphing(app, html, data) {
@@ -77,11 +134,12 @@ class Polymorpher extends Application {
                     one: {
                         icon: '<i class="fas fa-check"></i>',
                         label: "Accept",
-                        callback: html => {
+                        callback: async html => {
                             let inputs = html.find('input');
                             for (let input of inputs) {
                                 options[input.name].value = input.checked;
                             }
+                            await polymorpher.createBackup(originalActor);
                             polymorpher.exchangeActor(originalActor, targetActor, options);
                         }
                     },
@@ -100,6 +158,41 @@ class Polymorpher extends Application {
         }
     }
 
+    async createBackup(actor) {
+        if (actor.data.flags.polymorpher === undefined || actor.data.flags.polymorpher.data.isPolymorphed === false) {
+            // create relevant information    
+            let actorId = actor.data._id;
+            let dateId = Date.now();
+            let name = actor.data.name;
+            let date = new Date();
+            let displayDate = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',','');
+            let combinedId = `${actorId}.${dateId}`;
+
+            // store backup in settings    
+            game.settings.register("Polymorpher", combinedId, {
+                name: "Polymorpher backup character store",
+                hint: "stores polymorphed targets",
+                default: '',
+                type: String,
+                scope: 'world',
+                onChange: backup => {
+                    console.log('Polymorpher | Backup created');
+                }
+            });
+            game.settings.set('Polymorpher', combinedId, JSON.stringify(actor.data));
+
+            // create refrence in backupStore
+            let storeData = {
+                id: actorId,
+                name: name,
+                displayDate: displayDate
+            }
+
+            this.backupCharacterStore[combinedId] = storeData;
+            game.settings.set('Polymorpher', 'store', this.backupCharacterStore);
+        }
+    }
+    
     exchangeActor(originalActor, newActor, options = false) {
         ui.notifications.info(`Polymorphing ${originalActor.name} into a ${newActor.name}`);
         // creating a copy of the data of newActor to prevent any modification of the droped actor 
@@ -242,7 +335,7 @@ class Polymorpher extends Application {
             });
         }
 
-        originalActor.update(newActorData, true);
+        originalActor.update(newActorData);
     }
 
     enableRestoration(app, html, data) {
@@ -276,6 +369,71 @@ class Polymorpher extends Application {
         }
     }
 
+    exportFromStorage(combinedId) {
+        game.settings.register("Polymorpher", combinedId, {
+            name: "Polymorpher backup character store",
+            hint: "stores polymorphed targets",
+            default: '',
+            type: String,
+            scope: 'world',
+            onChange: backup => {
+            }
+        });
+        let originalDataJSON = game.settings.get('Polymorpher', combinedId)
+        saveDataToFile(originalDataJSON, "text/json", `charackterBackup_${this.backupCharacterStore[combinedId].name}`);
+    }
+
+    restoreFromStorage(combinedId) {
+        game.settings.register("Polymorpher", combinedId, {
+            name: "Polymorpher backup character store",
+            hint: "stores polymorphed targets",
+            default: '',
+            type: String,
+            scope: 'world',
+            onChange: backup => {
+            }
+        });
+        let originalDataJSON = game.settings.get('Polymorpher', combinedId)
+        let actorId = combinedId.split('.')[0]
+        let actor = game.actors.get(actorId);
+
+        this.restoreActor(actor, originalDataJSON);
+    }
+
+    removeFromStorage(combinedId) {
+        new Dialog({
+            title: "Delete Actor Backup",
+            content: "<p>Are you sure?</p>",
+            buttons: {
+                yes: {
+                    icon: '<i class="fas fa-check"></i>',
+                    label: "Yes",
+                    callback: () => {
+                        game.settings.register("Polymorpher", combinedId, {
+                            name: "Polymorpher backup character store",
+                            hint: "stores polymorphed targets",
+                            default: '',
+                            type: String,
+                            scope: 'world',
+                            onChange: backup => {
+                            }
+                        });
+                        game.settings.set('Polymorpher', combinedId, '');
+                        delete this.backupCharacterStore[combinedId];
+                        game.settings.set('Polymorpher', 'store', this.backupCharacterStore);
+                    }
+                },
+                no: {
+                    icon: '<i class="fas fa-times"></i>',
+                    label: "No",
+                    callback: () => { }
+                }
+            },
+            default: "no",
+            close: () => { }
+        }).render(true);
+    }
+    
     restoreActor(actor, originalDataJSON) {
         ui.notifications.info(`Restoring ${actor.name} to their former glory!`);
         let originalData = JSON.parse(originalDataJSON);
@@ -309,7 +467,6 @@ class Polymorpher extends Application {
         }
 
         originalData.flags.polymorpher = newFlag;
-        console.log(originalData);
         //actor.data.data = originalData.data; <- doesnt work after reloading
 
         for (let category in originalData.data) {
@@ -325,7 +482,12 @@ class Polymorpher extends Application {
                 }
             }
         }
-        actor.update(originalData, true);
+        actor.update(originalData);
+
+        // removing backup in the settings 
+        /*
+        this.backupCharacterStore[actor.data._id] = undefined;
+        game.settings.set('Polymorpher', 'backup', this.backupCharacterStore);*/
     }
 }
 
@@ -338,4 +500,4 @@ Hooks.on('ready', () => {
             volume: 0.20
         });
     });
-})
+});
