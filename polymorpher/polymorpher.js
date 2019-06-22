@@ -380,7 +380,7 @@ class Polymorpher extends Application {
             }
         });
         let originalDataJSON = game.settings.get('Polymorpher', combinedId)
-        saveDataToFile(originalDataJSON, "text/json", `charackterBackup_${this.backupCharacterStore[combinedId].name}`);
+        saveDataToFile(originalDataJSON, "text/json", `charackterBackup_${this.backupCharacterStore[combinedId].name}.json`);
     }
 
     restoreFromStorage(combinedId) {
