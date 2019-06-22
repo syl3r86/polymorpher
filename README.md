@@ -1,3 +1,5 @@
+# WARNING! DO NOT USE V0.1 IN FVTT 0.3.1. IT IS BROKEN AND WILL BREAK ACTOR DATA!
+
 # Polymorpher
 A module for Foundry VTT that lets you polymorph characters into any other character!
 Just drag any Actor (NPC or Character) ontop of another Actor to change the later into the prior. Support droping both from Compendium or the sidebar.
