@@ -29,7 +29,34 @@ class Polymorpher extends Application {
                 }
             });
             this.backupCharacterStore = game.settings.get('Polymorpher', 'store');
-            
+
+
+
+            let options = {
+                keepPhysical: { label: 'Keep Physical Ablitiescores (Str, Dex, Con)', value: false },
+                keepMental: { label: 'Keep Mental Ablitiescores (Wis, Int, Cha)', value: false },
+                keepSaves: { label: 'Keep Savingthrow Proficiency of the Character', value: false },
+                keepSkills: { label: 'Keep Skill Proficiency of the Character', value: false },
+                mergeSaves: { label: 'Merge Savingthrow Proficiencys (take both)', value: false },
+                mergeSkills: { label: 'Merge Skill Proficiency (take both)', value: false },
+                keepFeats: { label: 'Keep Features', value: false },
+                keepSpells: { label: 'Keep Spells', value: false },
+                keepItems: { label: 'Keep Equipment', value: false },
+                keepBio: { label: 'Keep Biography', value: false },
+                keepVision: { label: 'Keep Vision (Character and Token)', value: false },
+                changeActorType: { label: 'Change Actor Type (requires reopening of the sheet)', value: false },
+            }
+            game.settings.register("Polymorpher", "defaultSettings", {
+                name: "default settings for polymorpher",
+                default: options,
+                type: Object,
+                scope: 'world',
+                onChange: backup => {
+                    this.backupCharacterStore = backup;
+                    this.render(false);
+                }
+            });
+
             let button = $(`<button id="polymorpherBackupSystem"><i class="fas fa-address-book"></i> Polymorpher Backups</button>`);
             button.click(ev => {
                 this.render(true);
@@ -109,23 +136,10 @@ class Polymorpher extends Application {
                 targetActor = game.actors.get(dropData.id).data;
             }
 
-            let options = {
-                keepPhysical: { label: 'Keep Physical Ablitiescores (Str, Dex, Con)', value: false },
-                keepMental: { label: 'Keep Mental Ablitiescores (Wis, Int, Cha)', value: false },
-                keepSaves: { label: 'Keep Savingthrow Proficiency of the Character', value: false },
-                keepSkills: { label: 'Keep Skill Proficiency of the Character', value: false },
-                mergeSaves: { label: 'Merge Savingthrow Proficiencys (take both)', value: false },
-                mergeSkills: { label: 'Merge Skill Proficiency (take both)', value: false },
-                keepFeats: { label: 'Keep Features', value: false },
-                keepSpells: { label: 'Keep Spells', value: false },
-                keepItems: { label: 'Keep Equipment', value: false },
-                keepBio: { label: 'Keep Biography', value: false },
-                keepVision: { label: 'Keep Vision (Character and Token)', value: false },
-                changeActorType: { label: 'Change Actor Type (requires reopening of the sheet)', value: false },
-            }
+            let options = await game.settings.get('Polymorpher', 'defaultSettings');
             let dialogContent = ''
             for (let option in options) {
-                dialogContent += `<div><input type="checkbox" name="${option}"> <label for="${option}">${options[option].label}</div>`;
+                dialogContent += `<div><input type="checkbox" name="${option}" ${options[option].value?"checked":""}> <label for="${option}">${options[option].label}</div>`;
             }
             let d = new Dialog({
                 title: "Polymorphing - choose your options",
@@ -140,6 +154,7 @@ class Polymorpher extends Application {
                                 options[input.name].value = input.checked;
                             }
                             await polymorpher.createBackup(originalActor);
+                            game.settings.set('Polymorpher', 'defaultSettings', options);
                             polymorpher.exchangeActor(originalActor, targetActor, options);
                         }
                     },
@@ -311,6 +326,14 @@ class Polymorpher extends Application {
             if (originalActor.data.flags.polymorpher === undefined || originalActor.data.flags.polymorpher.data.isPolymorphed === false) {
                 newRawTokenData.flags.polymorpher = { originalTokenData: oldRawTokenData };
             }
+            // do not change x/y coordinates
+            delete newRawTokenData.x;
+            delete newRawTokenData.y;
+
+            // do not change display settings for name/bars
+            delete newRawTokenData.displayName;
+            delete newRawTokenData.displayBars;
+
             token.update(canvas.scene._id, newRawTokenData);
         }
 
@@ -457,8 +480,8 @@ class Polymorpher extends Application {
                 originalTokenData = originalData.token;
             }
             // do not fall back on x/y coordinates
-            originalTokenData.x = undefined;
-            originalTokenData.y = undefined;
+            delete originalTokenData.x;
+            delete originalTokenData.y;
             token.update(canvas.scene._id, originalTokenData);
         }
         if (actor.data.type === 'character') {
