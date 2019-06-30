@@ -6,6 +6,7 @@ Just drag any Actor (NPC or Character) ontop of another Actor to change the late
 1. Download the [polymorpher.zip](https://github.com/syl3r86/polymorpher/raw/master/polymorpher.zip)
 2. Unzip it into FoundryVTT/resources/app/public/modules
 3. Restart Foundry if it was running.
+4. Enable the Module in the Module Manager within the world.
 
 Requires the dnd5e system. Supports the default character sheet, the better NPC sheet and tentativly Mörills adnd5e sheet, though be cautious with the later one, sinc that hasn't been tested as thorough.
 
