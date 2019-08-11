@@ -160,7 +160,7 @@ class Polymorpher extends Application {
                     },
                     two: {
                         icon: '<i class="fas fa-times"></i>',
-                        label: "Cancle"
+                        label: "Cancel"
                     }
                 },
                 default: "one",
