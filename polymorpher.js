@@ -5,17 +5,8 @@ class Polymorpher extends Application {
         super();
 
         // default sheets
-        Hooks.on(`renderActorSheet5eCharacter`, (app, html, data) => this.enablePolymorphing(app, html, data));
-        Hooks.on(`renderActorSheet5eNPC`, (app, html, data) => this.enablePolymorphing(app, html, data));
-
-        // better npc sheet
-        Hooks.on(`renderBetterNPCActor5eSheet`, (app, html, data) => this.enablePolymorphing(app, html, data));
-
-        // adnd5e sheets
-        Hooks.on(`renderActorSheetA5eCharacter`, (app, html, data) => this.enablePolymorphing(app, html, data));
-        Hooks.on(`renderActorSheetA5eNPC`, (app, html, data) => this.enablePolymorphing(app, html, data));
-
-
+        Hooks.on(`renderActorSheet`, (app, html, data) => this.enablePolymorphing(app, html, data));
+                    
         Hooks.on('ready', () => {
             game.settings.register("Polymorpher", "store", {
                 name: "Polymorpher backup character store",
