@@ -1,11 +1,12 @@
 # Polymorpher
+
 A module for Foundry VTT that lets you polymorph characters into any other character!
 Just drag any Actor (NPC or Character) ontop of another Actor-sheet to change the later into the prior. Support droping both from Compendium or the sidebar.
 
 ## Installation
 1. Copy this link and use it in Foundrys Module Manager to install the Module
 
-    > https://raw.githubusercontent.com/syl3r86/polymorpher/master/module.json
+    > https://raw.githubusercontent.com/syl3r86/polymorpher/pre-0.4.4/module.json
     
 2. Enable the Module in your Worlds Module Settings
 
