@@ -175,7 +175,7 @@ class Polymorpher extends Application {
             let date = new Date();
             let displayDate = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',','');
             let combinedId = `${actorId}.${dateId}`;
-
+            console.log(actorId, name, displayDate, combinedId);
             // store backup in settings    
             game.settings.register("Polymorpher", combinedId, {
                 name: "Polymorpher backup character store",
@@ -347,7 +347,9 @@ class Polymorpher extends Application {
             });
         }
 
-        originalActor.update(newActorData);
+        originalActor.update(newActorData).then(obj => {
+            obj.sheet.render();
+        });
     }
 
     enableRestoration(app, html, data) {
@@ -447,6 +449,7 @@ class Polymorpher extends Application {
     }
     
     restoreActor(actor, originalDataJSON) {
+        console.log(actor);
         ui.notifications.info(`Restoring ${actor.name} to their former glory!`);
         let originalData = JSON.parse(originalDataJSON);
         let newFlag = {
@@ -483,8 +486,12 @@ class Polymorpher extends Application {
 
         for (let category in originalData.data) {
             for (let attr in originalData.data[category]) {
-                if (typeof originalData.data[category][attr] === 'object' && originalData.data[category][attr].value === undefined) {
-                    originalData.data[category][attr].value = '';
+                if (typeof originalData.data[category][attr] === 'object' && (originalData.data[category][attr] === null || originalData.data[category][attr].value === undefined)) {
+                    if (originalData.data[category][attr] === null) {
+                        originalData.data[category][attr] = '';
+                    } else {
+                        originalData.data[category][attr].value = '';
+                    }
                 }
                 let specialTraits = ['languages', 'di', 'dr', 'dv', 'ci'];
                 if (specialTraits.indexOf(attr) !== -1) {
@@ -494,7 +501,10 @@ class Polymorpher extends Application {
                 }
             }
         }
-        actor.update(originalData);
+        
+        actor.update(originalData).then(obj => {
+            obj.sheet.render();
+        });
 
         // removing backup in the settings 
         /*
