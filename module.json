@@ -10,7 +10,7 @@
 	"packs": [],
     "url": "https://github.com/syl3r86/polymorpher",
     "manifest": "https://raw.githubusercontent.com/syl3r86/polymorpher/master/module.json",
-    "download": "https://github.com/syl3r86/polymorpher/archive/master.zip",
+    "download": "https://github.com/syl3r86/polymorpher/archive/pre-0.4.4.zip",
 	"socket": true,
     "minimumCoreVersion": "0.4.3"
 }
