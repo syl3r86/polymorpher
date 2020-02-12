@@ -210,7 +210,7 @@ class Polymorpher extends Application {
             items: newActorRawData.items,
             token: newActorRawData.token,
             img: newActorRawData.img,
-            flags: newActorRawData.flags
+            flags: {}
         }
         newActorData.token.actorId = originalActor.data.token.actorId;
         newActorData.token.actorLink = originalActor.data.token.actorLink;
@@ -235,6 +235,15 @@ class Polymorpher extends Application {
         if (newActorData.type === 'character') {
             newActorData.data.attributes.exhaustion = originalActor.data.data.attributes.exhaustion;
             newActorData.data.attributes.inspiration = originalActor.data.data.attributes.inspiration;
+        }
+
+        // create new class item if the droped actor is an npc and doesnt have class levels
+        let classItem = null;
+        if (newActorData.data.details.cr) {
+            classItem = {};
+            classItem.name = `${newActorRawData.name}Class`;
+            classItem.type = 'class';
+            classItem.data = { levels: newActorData.data.details.cr };
         }
 
         // keep original values for some, as defined in options
@@ -348,7 +357,14 @@ class Polymorpher extends Application {
         }
 
         originalActor.update(newActorData).then(obj => {
-            obj.sheet.render();
+            // manually creating the class item to store the proper class
+            if (classItem !== null) {
+                obj.createOwnedItem(classItem);
+            }
+            // manually updating ac because that doesnt get updated for some reason
+            obj.update({ 'data.attributes.ac.value': newActorData.data.attributes.ac.value }).then(obj => {
+                obj.sheet.render();
+            });
         });
     }
 
