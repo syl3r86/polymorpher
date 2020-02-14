@@ -7,29 +7,17 @@ class Polymorpher extends Application {
         // default sheets
         Hooks.on(`renderActorSheet`, (app, html, data) => this.enablePolymorphing(app, html, data));
                     
-        Hooks.on('ready', () => {
-            game.settings.register("Polymorpher", "store", {
-                name: "Polymorpher backup character store",
-                hint: "stores polymorphed targets",
-                default: {},
-                type: Object,
-                scope: 'world',
-                onChange: backup => {
-                    this.backupCharacterStore = backup;
-                    this.render(false);
-                }
-            });
-            this.backupCharacterStore = game.settings.get('Polymorpher', 'store');
+        Hooks.on('ready', async () => {
+            this.loadBackupStore();
 
-
-
-            let options = {
+            let defaultOptions = {
                 keepPhysical: { label: 'Keep Physical Ablitiescores (Str, Dex, Con)', value: false },
                 keepMental: { label: 'Keep Mental Ablitiescores (Wis, Int, Cha)', value: false },
                 keepSaves: { label: 'Keep Savingthrow Proficiency of the Character', value: false },
                 keepSkills: { label: 'Keep Skill Proficiency of the Character', value: false },
                 mergeSaves: { label: 'Merge Savingthrow Proficiencys (take both)', value: false },
                 mergeSkills: { label: 'Merge Skill Proficiency (take both)', value: false },
+                keepClass: { label: 'Keep Proficiency bonus (leaves Class items in sheet)', value: false },
                 keepFeats: { label: 'Keep Features', value: false },
                 keepSpells: { label: 'Keep Spells', value: false },
                 keepItems: { label: 'Keep Equipment', value: false },
@@ -38,14 +26,18 @@ class Polymorpher extends Application {
             }
             game.settings.register("Polymorpher", "defaultSettings", {
                 name: "default settings for polymorpher",
-                default: options,
+                default: defaultOptions,
                 type: Object,
-                scope: 'world',
-                onChange: backup => {
-                    this.backupCharacterStore = backup;
-                    this.render(false);
-                }
+                scope: 'world'
             });
+
+            let oldSettings = await game.settings.get("Polymorpher", "defaultSettings");
+            for (let key in oldSettings) {
+                if (defaultOptions[key]) {
+                    defaultOptions[key].value = oldSettings[key].value;
+                }
+            }
+            game.settings.set("Polymorpher", "defaultSettings", defaultOptions);
         });
 
         Hooks.on("renderSettings", (app, html) => {
@@ -129,16 +121,17 @@ class Polymorpher extends Application {
                 targetActor = game.actors.get(dropData.id).data;
             }
 
-            let options = await game.settings.get('Polymorpher', 'defaultSettings');
+            let options = await game.settings.get("Polymorpher", "defaultSettings");
+
             let dialogContent = ''
             for (let option in options) {
-                dialogContent += `<div><input type="checkbox" name="${option}" ${options[option].value?"checked":""}> <label for="${option}">${options[option].label}</div>`;
+                dialogContent += `<div><input type="checkbox" name="${option}" ${options[option].value ? "checked" : ""}> <label for="${option}">${options[option].label}</div>`;
             }
             let d = new Dialog({
                 title: "Polymorphing - choose your options",
                 content: dialogContent,
                 buttons: {
-                    one: {
+                    accept: {
                         icon: '<i class="fas fa-check"></i>',
                         label: "Accept",
                         callback: async html => {
@@ -151,7 +144,51 @@ class Polymorpher extends Application {
                             polymorpher.exchangeActor(originalActor, targetActor, options);
                         }
                     },
-                    two: {
+                    wildshape: {
+                        icon: '<i class="fas fa-paw"></i>',
+                        label: "Wildshape",
+                        callback: async html => {
+                            options = {
+                                keepPhysical: { label: 'Keep Physical Ablitiescores (Str, Dex, Con)', value: false },
+                                keepMental: { label: 'Keep Mental Ablitiescores (Wis, Int, Cha)', value: true },
+                                keepSaves: { label: 'Keep Savingthrow Proficiency of the Character', value: false },
+                                keepSkills: { label: 'Keep Skill Proficiency of the Character', value: false },
+                                mergeSaves: { label: 'Merge Savingthrow Proficiencys (take both)', value: true },
+                                mergeSkills: { label: 'Merge Skill Proficiency (take both)', value: true },
+                                keepClass: { label: 'Keep Proficiency bonus (leaves Class items in sheet)', value: false },
+                                keepFeats: { label: 'Keep Features', value: false },
+                                keepSpells: { label: 'Keep Spells', value: false },
+                                keepItems: { label: 'Keep Equipment', value: false },
+                                keepBio: { label: 'Keep Biography', value: false },
+                                keepVision: { label: 'Keep Vision (Character and Token)', value: false }
+                            }
+                            await polymorpher.createBackup(originalActor);
+                            polymorpher.exchangeActor(originalActor, targetActor, options);
+                        }
+                    },
+                    polymorph: {
+                        icon: '<i class="fas fa-pastafarianism"></i>',
+                        label: "Polymorph",
+                        callback: async html => {
+                            options = {
+                                keepPhysical: { label: 'Keep Physical Ablitiescores (Str, Dex, Con)', value: false },
+                                keepMental: { label: 'Keep Mental Ablitiescores (Wis, Int, Cha)', value: false },
+                                keepSaves: { label: 'Keep Savingthrow Proficiency of the Character', value: false },
+                                keepSkills: { label: 'Keep Skill Proficiency of the Character', value: false },
+                                mergeSaves: { label: 'Merge Savingthrow Proficiencys (take both)', value: false },
+                                mergeSkills: { label: 'Merge Skill Proficiency (take both)', value: false },
+                                keepClass: { label: 'Keep Proficiency bonus (leaves Class items in sheet)', value: false },
+                                keepFeats: { label: 'Keep Features', value: false },
+                                keepSpells: { label: 'Keep Spells', value: false },
+                                keepItems: { label: 'Keep Equipment', value: false },
+                                keepBio: { label: 'Keep Biography', value: false },
+                                keepVision: { label: 'Keep Vision (Character and Token)', value: false }
+                            }
+                            await polymorpher.createBackup(originalActor);
+                            polymorpher.exchangeActor(originalActor, targetActor, options);
+                        }
+                    },
+                    cancle: {
                         icon: '<i class="fas fa-times"></i>',
                         label: "Cancel"
                     }
@@ -175,29 +212,16 @@ class Polymorpher extends Application {
             let date = new Date();
             let displayDate = date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',','');
             let combinedId = `${actorId}.${dateId}`;
-            console.log(actorId, name, displayDate, combinedId);
-            // store backup in settings    
-            game.settings.register("Polymorpher", combinedId, {
-                name: "Polymorpher backup character store",
-                hint: "stores polymorphed targets",
-                default: '',
-                type: String,
-                scope: 'world',
-                onChange: backup => {
-                    console.log('Polymorpher | Backup created');
-                }
-            });
-            game.settings.set('Polymorpher', combinedId, JSON.stringify(actor.data));
 
-            // create refrence in backupStore
             let storeData = {
                 id: actorId,
                 name: name,
-                displayDate: displayDate
+                displayDate: displayDate,
+                data: JSON.stringify(actor.data)
             }
 
             this.backupCharacterStore[combinedId] = storeData;
-            game.settings.set('Polymorpher', 'store', this.backupCharacterStore);
+            this.saveBackupStore();
         }
     }
     
@@ -271,14 +295,29 @@ class Polymorpher extends Application {
             }
             if (options.mergeSaves.value) {
                 for (let ability in newActorData.data.abilities) {
-                    if (originalActor.data.data.abilities[ability].proficient > newActorData.data.abilities[ability].proficient)
+                    if (originalActor.data.data.abilities[ability].proficient > newActorData.data.abilities[ability].proficient) {
                         newActorData.data.abilities[ability].proficient = originalActor.data.data.abilities[ability].proficient;
+                    }
                 }
             }
             if (options.mergeSkills.value) {
                 for (let skill in newActorData.data.skills) {
-                    if (originalActor.data.data.skills[skill].value > newActorData.data.skills[skill].value)
+                    if (originalActor.data.data.skills[skill].value >= newActorData.data.skills[skill].value) {
+                        if (!options.keepClass.value) {
+                            let oldProf = originalActor.data.data.attributes.prof * originalActor.data.data.skills[skill].value;
+                            let newProf = newActorData.data.attributes.prof * newActorData.data.skills[skill].value;
+                            let diff = oldProf - newProf;
+                            newActorData.data.skills[skill].bonus = diff;
+                        }
                         newActorData.data.skills[skill].value = originalActor.data.data.skills[skill].value;
+                    }
+                }
+            }
+            if (options.keepClass.value) {
+                for (let item of originalActor.data.items) {
+                    if (item.type === 'class') {
+                        newActorData.items.push(item);
+                    }
                 }
             }
             if (options.keepFeats.value) {
@@ -358,7 +397,7 @@ class Polymorpher extends Application {
 
         originalActor.update(newActorData).then(obj => {
             // manually creating the class item to store the proper class
-            if (classItem !== null) {
+            if (classItem !== null && !options.keepClass.value) {
                 obj.createOwnedItem(classItem);
             }
             // manually updating ac because that doesnt get updated for some reason
@@ -399,31 +438,37 @@ class Polymorpher extends Application {
         }
     }
 
+    async loadBackupStore() {
+        try {
+            await fetch('modules/polymorpher/characterStore.json').then(async result => {
+                let data = await result.json();
+                this.backupCharacterStore = data;
+            });
+        } catch (e) {
+            console.log(e);
+            this.backupCharacterStore = {};
+        }        
+    }
+
+    saveBackupStore() {
+        let data = new FormData();
+        let blob = new Blob([JSON.stringify(this.backupCharacterStore)], { type: "text/xml" });
+        data.append("target", 'modules/polymorpher');
+        data.append("upload", blob, 'characterStore.json');
+        data.append('source', 'data');
+
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload', true);
+        xhr.send(data);
+    }
+    
     exportFromStorage(combinedId) {
-        game.settings.register("Polymorpher", combinedId, {
-            name: "Polymorpher backup character store",
-            hint: "stores polymorphed targets",
-            default: '',
-            type: String,
-            scope: 'world',
-            onChange: backup => {
-            }
-        });
-        let originalDataJSON = game.settings.get('Polymorpher', combinedId)
+        let originalDataJSON = this.backupCharacterStore[combinedId].data;
         saveDataToFile(originalDataJSON, "text/json", `charackterBackup_${this.backupCharacterStore[combinedId].name}.json`);
     }
 
     restoreFromStorage(combinedId) {
-        game.settings.register("Polymorpher", combinedId, {
-            name: "Polymorpher backup character store",
-            hint: "stores polymorphed targets",
-            default: '',
-            type: String,
-            scope: 'world',
-            onChange: backup => {
-            }
-        });
-        let originalDataJSON = game.settings.get('Polymorpher', combinedId)
+        let originalDataJSON = this.backupCharacterStore[combinedId].data;
         let actorId = combinedId.split('.')[0]
         let actor = game.actors.get(actorId);
 
@@ -434,23 +479,15 @@ class Polymorpher extends Application {
         new Dialog({
             title: "Delete Actor Backup",
             content: "<p>Are you sure?</p>",
+            width:auto,
             buttons: {
                 yes: {
                     icon: '<i class="fas fa-check"></i>',
                     label: "Yes",
                     callback: () => {
-                        game.settings.register("Polymorpher", combinedId, {
-                            name: "Polymorpher backup character store",
-                            hint: "stores polymorphed targets",
-                            default: '',
-                            type: String,
-                            scope: 'world',
-                            onChange: backup => {
-                            }
-                        });
-                        game.settings.set('Polymorpher', combinedId, '');
                         delete this.backupCharacterStore[combinedId];
-                        game.settings.set('Polymorpher', 'store', this.backupCharacterStore);
+                        this.saveBackupStore();
+                        this.render();
                     }
                 },
                 no: {
@@ -465,7 +502,6 @@ class Polymorpher extends Application {
     }
     
     restoreActor(actor, originalDataJSON) {
-        console.log(actor);
         ui.notifications.info(`Restoring ${actor.name} to their former glory!`);
         let originalData = JSON.parse(originalDataJSON);
         let newFlag = {
