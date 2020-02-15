@@ -26,6 +26,8 @@ If you don't want to change every aspect of the character, you can choose to exc
   - this will keep proficiencys of the character intact and also grant any extra proficiencys from the draged on actor
 - Merge Skill Proficiency (take both)
   - this will keep proficiencys of the character intact and also grant any extra proficiencys from the draged on actor
+- Keep Proficiency bonus (leaves Class items in sheet)
+  - this will leave any Class "item" of the original actor in order to keep the original level and therefore Proficiency bonus
 - Keep Features
 - Keep Spells
 - Keep Equipment
@@ -36,6 +38,11 @@ If you don't want to change every aspect of the character, you can choose to exc
 ---
 
 As well as the character sheet, this module also changes token settings to match the polymorph actor. It will update art, visibility options for name/bar, vision settings (optionally disableable) and token bar settings. This change affects any token owned by the polymorphed actor on the active scene. Same for reverting back to the original. Any token created after polymorphing on the active scene, will also revert to the characters default token setup. The place in the combat order and initiative is also preserved.
+
+---
+
+## Backup Character Store
+Anytime an Actor is polymorphed, the polymorpher module will create a backup of the original actor, including timestamp. These backups get saved to the file characterStore.json in the modules folder. They are also accessible from an app within Foundry VTT that can be opened by clicking the Polymorpher Backups button in the settings sidebar. From here you can easily restore actors to the state of the backup, download the actors data in form of a json file or delete the backup entirely.
 
 ---
 
