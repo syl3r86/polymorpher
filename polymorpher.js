@@ -305,8 +305,9 @@ class Polymorpher extends Application {
                     if (originalActor.data.data.skills[skill].value >= newActorData.data.skills[skill].value) {
                         if (!options.keepClass.value) {
                             let oldProf = originalActor.data.data.attributes.prof * originalActor.data.data.skills[skill].value;
-                            let newProf = newActorData.data.attributes.prof * newActorData.data.skills[skill].value;
+                            let newProf = newActorData.data.attributes.prof * Math.max(newActorData.data.skills[skill].value, originalActor.data.data.skills[skill].value);
                             let diff = oldProf - newProf;
+                            //console.log(skill, oldProf, newProf, diff);
                             newActorData.data.skills[skill].bonus = diff;
                         }
                         newActorData.data.skills[skill].value = originalActor.data.data.skills[skill].value;
