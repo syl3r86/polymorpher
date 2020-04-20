@@ -1,5 +1,5 @@
 ---
-# This module is no longer maintained. Its functionality have been moved into the core version of dnd5e.
+# This module is no longer maintained. Its functionalitys have been moved into the core version of dnd5e.
 ---
 
 
