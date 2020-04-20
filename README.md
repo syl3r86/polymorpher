@@ -1,3 +1,8 @@
+---
+# This module is no longer maintained. Its functionality have been moved into the core version of dnd5e.
+---
+
+
 # Polymorpher
 
 > This version only works for Foundry v0.4.4 and up. To use the previous version please visit https://github.com/syl3r86/polymorpher/tree/pre-0.4.4
